@@ -1,0 +1,141 @@
+﻿@model WebApplication1.Models.OrderMaster
+
+@{
+    ViewBag.Title = "Edit Order";
+}
+
+<h2 id="book">Edit Your Order</h2>
+<div class="container">
+    <div class="master">
+        <h2>Order Details</h2>
+        @using (Html.BeginForm("Edit", "Order", FormMethod.Post, new { enctype = "multipart/form-data", id = "orderForm" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(model => model.OrderID)
+
+            <table class="table table-responsive">
+                <tr>
+                    <td>Order No</td>
+                    <td>
+                        @Html.TextBoxFor(model => model.OrderID, new { @class = "form-control", @readonly = "readonly" })
+                    </td>
+                    <td>Order Date</td>
+                    <td>
+                        @Html.EditorFor(model => model.OrderDate, new { htmlAttributes = new { @class = "form-control" } })
+                        @Html.ValidationMessageFor(model => model.OrderDate, "", new { @class = "text-danger" })
+                    </td>
+                </tr>
+                <tr>
+                    <td>Description</td>
+                    <td colspan="3">
+                        @Html.TextAreaFor(model => model.Description, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Upload Image</td>
+                    <td>
+                        <input type="file" name="file" class="form-control" />
+                        @if (!string.IsNullOrEmpty(Model.AddressProofImage))
+                        {
+                            <img src="@Url.Content(Model.AddressProofImage)" alt="Proof" width="100" height="100" />
+                        }
+                        @Html.ValidationMessageFor(model => model.AddressProofImage, "", new { @class = "text-danger" })
+                    </td>
+                </tr>
+            </table>
+            <div class="details">
+                <h2>Order Items</h2>
+                <table class="table table-responsive">
+                    <tr>
+                        <td>Category</td>
+                        <td>Product</td>
+                        <td>Quantity</td>
+                        <td>Rate</td>
+                    </tr>
+                    @foreach (var orderDetail in Model.OrderDetails)
+                    {
+                        <tr>
+                            <td>
+                                <select class="form-control" name="Category_@orderDetail.OrderDetailID">
+                                    <option>Select</option>
+                                    @foreach (var category in ViewBag.Categories as SelectList)
+                                    {
+                                        <option value="@category.Value" @(category.Value == orderDetail.Category?.CategoryID.ToString() ? "selected" : "")>@category.Text</option>
+                                    }
+                                </select>
+                            </td>
+                            <td>
+                                <select class="form-control" name="Product_@orderDetail.OrderDetailID">
+                                    <option>Select</option>
+                                    @foreach (var product in ViewBag.Products as SelectList)
+                                    {
+                                        <option value="@product.Value" @(product.Value == orderDetail.Product?.ProductID.ToString() ? "selected" : "")>@product.Text</option>
+                                    }
+                                </select>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control" value="@orderDetail.Quantity" name="Quantity_@orderDetail.OrderDetailID" />
+                            </td>
+                            <td>
+                                <input type="number" class="form-control" value="@orderDetail.Rate" name="Rate_@orderDetail.OrderDetailID" />
+                            </td>
+                        </tr>
+                    }
+                </table>
+            </div>
+
+            <div style="text-align:right">
+                <input type="submit" value="Update Order" class="btn btn-success" id="updateOrderBtn" />
+                <a href="@Url.Action("Index")" class="btn btn-secondary">Cancel</a>
+            </div>
+        }
+    </div>
+</div>
+
+<link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css" />
+<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+<script src="~/Scripts/My_Script.js"></script>
+<script>
+$(document).ready(function () {
+    $("#orderForm").on("submit", function (e) {
+        e.preventDefault(); 
+
+
+
+        if (confirm("Are you sure you want to update this order?")) {
+            $.ajax({
+                url: $(this).attr("action"),
+                type: $(this).attr("method"),
+                data: new FormData(this),
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message); 
+                        window.location.href = response.redirectUrl; 
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert("Something went wrong while updating the order.");
+                }
+            });
+        }
+    });
+});
+</script>
+
+<style>
+    #book {
+        text-align: center;
+    }
+
+    .error {
+        color: red;
+        font-size: 90%;
+    }
+</style>
